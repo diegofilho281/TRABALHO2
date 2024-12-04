@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciamento de Tarefas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        button {
+            padding: 5px 10px;
+            margin: 2px;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+        .editar-btn {
+            background-color: #4CAF50; /* Verde para editar */
+            color: white;
+        }
+        .excluir-btn {
+            background-color: #f44336; /* Vermelho para excluir */
+            color: white;
+        }
+        #login, #sistema, #cadastroUsuario {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Tela de Cadastro -->
+    <div id="cadastroUsuario" class="container">
+        <h1>Cadastro de Usuário</h1>
+        <div class="form-group">
+            <label for="cadastroNome">Nome:</label>
+            <input type="text" id="cadastroNome" placeholder="Preenchimento Obrigatório" required>
+        </div>
+        <div class="form-group">
+            <label for="cadastroEmail">E-mail:</label>
+            <input type="email" id="cadastroEmail" placeholder="Preenchimento Obrigatório" required>
+        </div>
+        <div class="form-group">
+            <label for="cadastroSenha">Senha:</label>
+            <input type="password" id="cadastroSenha" placeholder="Preenchimento Obrigatório" required>
+        </div>
+        <button onclick="cadastrarUsuario()">Cadastrar</button>
+    </div>
+
+    <!-- Tela de Login -->
+    <div id="login" class="container">
+        <h1>Login</h1>
+        <div class="form-group">
+            <label for="loginEmail">E-mail:</label>
+            <input type="email" id="loginEmail" placeholder="Preenchimento Obrigatório" required>
+        </div>
+        <div class="form-group">
+            <label for="loginSenha">Senha:</label>
+            <input type="password" id="loginSenha" placeholder="Preenchimento Obrigatório" required>
+        </div>
+        <button onclick="login()">Entrar</button>
+    </div>
+
+    <!-- Tela do Sistema de Gerenciamento de Tarefas -->
+    <div id="sistema" class="container">
+        <h1>Gerenciamento de Tarefas</h1>
+        <h2>Cadastrar Tarefa</h2>
+        <div class="form-group">
+            <label for="descricaoTarefa">Descrição da Tarefa:</label>
+            <input type="text" id="descricaoTarefa" placeholder="Preenchimento Obrigatório" required>
+        </div>
+        <div class="form-group">
+            <label for="setor">Setor:</label>
+            <input type="text" id="setor" placeholder="Preenchimento Obrigatório" required>
+        </div>
+        <div class="form-group">
+            <label for="vinculado">Vinculado(a):</label>
+            <select id="vinculado" required>
+                <option value="" disabled selected>Selecione um usuário</option>
+                <!-- As opções serão preenchidas dinamicamente -->
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="prioridade">Prioridade:</label>
+            <select id="prioridade" required>
+                <option value="" disabled selected>Preenchimento Obrigatório</option>
+                <option value="baixa">Baixa</option>
+                <option value="media">Média</option>
+                <option value="alta">Alta</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="status">Status:</label>
+            <select id="status" required>
+                <option value="" disabled selected>Selecione o status</option>
+                <option value="fazendo">Fazendo</option>
+                <option value="a_fazer">A Fazer</option>
+                <option value="pronta">Pronta</option>
+            </select>
+        </div>
+        <button onclick="cadastrarTarefa()">Cadastrar Tarefa</button>
+
+        <h2>Lista de Tarefas</h2>
+        <table id="tabelaTarefas">
+            <thead>
+                <tr>
+                    <th>ID da Tarefa</th>
+                    <th>Descrição</th>
+                    <th>Setor</th>
+                    <th>Prioridade</th>
+                    <th>Vinculado(a)</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Linhas da tabela serão geradas dinamicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let usuarios = [];
+        let tarefas = [];
+        let usuarioLogado = null;
+        let tarefaIdCounter = 1;
+        let tarefaEditando = null;
+
+        document.getElementById("cadastroUsuario").style.display = "block";
+
+        function cadastrarUsuario() {
+            const nome = document.getElementById("cadastroNome").value;
+            const email = document.getElementById("cadastroEmail").value;
+            const senha = document.getElementById("cadastroSenha").value;
+
+            if (nome && email && senha) {
+                usuarios.push({ id: usuarios.length + 1, nome, email, senha });
+                alert("Cadastro realizado com sucesso!");
+                
+                document.getElementById("cadastroNome").value = "";
+                document.getElementById("cadastroEmail").value = "";
+                document.getElementById("cadastroSenha").value = "";
+                exibirTela("login");
+            } else {
+                alert("Por favor, preencha todos os campos.");
+            }
+        }
+
+        function login() {
+            const email = document.getElementById("loginEmail").value;
+            const senha = document.getElementById("loginSenha").value;
+
+            usuarioLogado = usuarios.find(u => u.email === email && u.senha === senha);
+
+            if (usuarioLogado) {
+                alert("Login realizado com sucesso!");
+                exibirTela("sistema");
+                atualizarSelectVinculado();  // Preenche o campo "Vinculado(a)" após login
+            } else {
+                alert("E-mail ou senha incorretos.");
+            }
+        }
+
+        function cadastrarTarefa() {
+            const descricao = document.getElementById("descricaoTarefa").value;
+            const setor = document.getElementById("setor").value;
+            const prioridade = document.getElementById("prioridade").value;
+            const vinculado = document.getElementById("vinculado").value;
+            const status = document.getElementById("status").value;
+
+            if (descricao && setor && prioridade && vinculado && status) {
+                if (tarefaEditando !== null) {
+                    const tarefa = tarefas.find(t => t.id === tarefaEditando);
+                    tarefa.descricao = descricao;
+                    tarefa.setor = setor;
+                    tarefa.prioridade = prioridade;
+                    tarefa.vinculado = vinculado;
+                    tarefa.status = status;
+                    tarefaEditando = null;
+                    alert("Tarefa atualizada com sucesso!");
+                } else {
+                    const novaTarefa = {
+                        id: tarefaIdCounter++,
+                        descricao,
+                        setor,
+                        prioridade,
+                        vinculado,
+                        status
+                    };
+                    tarefas.push(novaTarefa);
+                    alert("Tarefa cadastrada com sucesso!");
+                }
+                atualizarTabelaTarefas();
+                limparCamposTarefa();
+            } else {
+                alert("Por favor, preencha todos os campos da tarefa.");
+            }
+        }
+
+        function atualizarSelectVinculado() {
+            const vinculadoSelect = document.getElementById("vinculado");
+            vinculadoSelect.innerHTML = '<option value="" disabled selected>Selecione um usuário</option>';
+            usuarios.forEach(u => {
+                const option = document.createElement("option");
+                option.value = u.id;
+                option.textContent = u.nome;
+                vinculadoSelect.appendChild(option);
+            });
+        }
+
+        function editarTarefa(id) {
+            const tarefa = tarefas.find(t => t.id === id);
+            document.getElementById("descricaoTarefa").value = tarefa.descricao;
+            document.getElementById("setor").value = tarefa.setor;
+            document.getElementById("prioridade").value = tarefa.prioridade;
+            document.getElementById("vinculado").value = tarefa.vinculado;
+            document.getElementById("status").value = tarefa.status;
+            tarefaEditando = id; // Marca que uma tarefa está sendo editada
+        }
+
+        function excluirTarefa(id) {
+            tarefas = tarefas.filter(t => t.id !== id); // Remove tarefa
+            atualizarTabelaTarefas();
+        }
+
+        function atualizarTabelaTarefas() {
+            const tabelaTarefas = document.getElementById("tabelaTarefas").getElementsByTagName("tbody")[0];
+            tabelaTarefas.innerHTML = "";
+            tarefas.forEach(tarefa => {
+                const row = tabelaTarefas.insertRow();
+                row.insertCell(0).textContent = tarefa.id;
+                row.insertCell(1).textContent = tarefa.descricao;
+                row.insertCell(2).textContent = tarefa.setor;
+                row.insertCell(3).textContent = tarefa.prioridade;
+                row.insertCell(4).textContent = usuarios.find(u => u.id === tarefa.vinculado).nome;
+                row.insertCell(5).textContent = tarefa.status;
+
+                // Ações
+                const actionsCell = row.insertCell(6);
+                actionsCell.innerHTML = `
+                    <button class="editar-btn" onclick="editarTarefa(${tarefa.id})">Editar</button>
+                    <button class="excluir-btn" onclick="excluirTarefa(${tarefa.id})">Excluir</button>
+                `;
+            });
+        }
+
+        function limparCamposTarefa() {
+            document.getElementById("descricaoTarefa").value = "";
+            document.getElementById("setor").value = "";
+            document.getElementById("prioridade").value = "";
+            document.getElementById("vinculado").value = "";
+            document.getElementById("status").value = "";
+        }
+
+        function exibirTela(tela) {
+            document.getElementById("cadastroUsuario").style.display = "none";
+            document.getElementById("login").style.display = "none";
+            document.getElementById("sistema").style.display = "none";
+            document.getElementById(tela).style.display = "block";
+        }
+    </script>
+</body>
+</html>
